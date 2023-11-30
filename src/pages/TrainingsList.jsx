@@ -39,11 +39,11 @@ export default function TrainingList() {
   
   const deleteTraining = (training) => {
     if (window.confirm("Are you sure?")) {
-      fetch(training.data._links.training.href, { method: 'DELETE' })
+      fetch("https://traineeapp.azurewebsites.net/api/trainings/"+training.data.id, { method: 'DELETE' })
         .then(res => {
           if (res.ok) {
             getTrainings();
-                        setMsg(" has been deleted successfully!");
+              setMsg(training.data.activity + " has been deleted successfully!");
             setOpen(true);  
           } else {
             alert("Error:" + res.status)
@@ -69,33 +69,11 @@ export default function TrainingList() {
   .catch(err => console.error(err));
   }
 
-  const updateTraining = (training, link) => {
-  if(window.confirm("Are you sure?")){
-    fetch(link, {
-      method: 'PUT',
-      headers: {
-        'Content-type': 'application/json'
-      },
-      body: JSON.stringify(training)
-    })
-    .then(res => {
-      if (res.ok) {
-        getTrainings();
-        setMsg(" has been edited successfully!");
-        setOpen(true);
-      } else {
-        alert("Error!" + res.status)
-      }
-    })
-    .catch(err => console.error(err))
-    }
-  }
-
   const columns = [
     {
       headerName: "Action",
       minWidth: 150,
-      cellRenderer: row => <Button>Delete</Button>,
+      cellRenderer: row => <Button onClick={() => deleteTraining(row)}>Delete</Button>,
       editable: false,
       colId: "action",
       autoHeight: true
@@ -106,15 +84,6 @@ export default function TrainingList() {
     { headerName: 'Customer', field: 'fullname', cellRenderer: 'customCellRenderer' }
   ]
 
-  const defaultColDef = useMemo(() => {
-		return {
-			flex: 1,
-			cellDataType: false,
-		};
-	}, []);
-
-  
-
   return (
     <div>
       <div>TrainingList</div>
@@ -124,11 +93,12 @@ export default function TrainingList() {
           rowData={trainings}
           columnDefs={columns}
           domLayout= 'autoHeight'
-          defaultColDef={defaultColDef}
           editType="none"
+          //minimises bundle size
           modules={[ClientSideRowModelModule]}
           pagination={true}
           components={{
+            //aligns ag-grid cell content to the start of the cell
             customCellRenderer: CustomCellRenderer
           }}
         />
