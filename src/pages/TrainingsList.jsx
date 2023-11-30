@@ -91,18 +91,11 @@ export default function TrainingList() {
     }
   }
 
-  const handleEditClick = (row) => {
-    const node = gridRef.current.api.getRowNode(row.id);
-    if (node) {
-    node.setDataValue('editable', !node.data.editable);
-  }
-  };
-
   const columns = [
     {
-      headerName: "action",
+      headerName: "Action",
       minWidth: 150,
-      cellRenderer: actionCellRenderer,
+      cellRenderer: row => <Button>Delete</Button>,
       editable: false,
       colId: "action",
       autoHeight: true
@@ -116,123 +109,23 @@ export default function TrainingList() {
   const defaultColDef = useMemo(() => {
 		return {
 			flex: 1,
-			editable: true,
 			cellDataType: false,
 		};
 	}, []);
 
   
-  function ActionButtons({ onEdit, onDelete, onUpdate, onCancel, isCurrentRowEditing}) {
-
-    if(isCurrentRowEditing){
-      return (
-      <div>
-        <Button className="action-button update" onClick={onUpdate} style={{height:'100%'}}>
-          Update
-        </Button>
-        <Button className="action-button cancel" onClick={onCancel}>
-          Cancel
-        </Button>
-      </div>
-      )
-    } else {
-      return(
-      <div>
-        <Button className="action-button edit" onClick={onEdit}>
-          Edit
-        </Button>
-        <Button className="action-button delete" onClick={onDelete}>
-          Delete
-        </Button>
-      </div>
-      )
-    }
-  }
-  
-  function actionCellRenderer(params) {
-    const { node, api } = params;
-    const isCurrentRowEditing = api.getEditingCells().some((cell) => cell.rowIndex === node.rowIndex);
-  
-    const handleEdit = () => {
-      api.startEditingCell({
-        rowIndex: node.rowIndex,
-        colKey: api.getDisplayedCenterColumns()[0].colId,
-      });
-    };
-  
-    const handleDelete = () => {
-      api.applyTransaction({ remove: [node.data] });
-    };
-  
-    const handleUpdate = () => {
-      api.stopEditing(false);
-    };
-  
-    const handleCancel = () => {
-      api.stopEditing(true);
-    };
-  
-    return <ActionButtons isCurrentRowEditing={isCurrentRowEditing} onEdit={handleEdit} onDelete={handleDelete} onUpdate={handleUpdate} onCancel={handleCancel} />;
-  }
-
-  const onCellClicked = (params) => {
-    // Handle click event for action cells
-    console.log(params.column.colId)
-    if (params.column.colId === "action" && params.event.target.dataset.action) {
-      let action = params.event.target.dataset.action;
-
-      if (action === "edit") {
-        params.api.startEditingCell({
-          rowIndex: params.node.rowIndex,
-          // gets the first columnKey
-          colKey: params.columnApi.getDisplayedCenterColumns()[0].colId
-        });
-      }
-
-      if (action === "delete") {
-        params.api.applyTransaction({
-          remove: [params.node.data]
-        });
-      }
-
-      if (action === "update") {
-        params.api.stopEditing(false);
-      }
-
-      if (action === "cancel") {
-        params.api.stopEditing(true);
-      }
-    }
-  }
-
-  const onRowEditingStarted = (params) => {
-    params.api.refreshCells({
-      columns: ["action"],
-      rowNodes: [params.node],
-      force: true
-    });
-  }
-  const onRowEditingStopped = (params) => {
-    params.api.refreshCells({
-      columns: ["action"],
-      rowNodes: [params.node],
-      force: true
-    });
-  }
 
   return (
     <div>
       <div>TrainingList</div>
-      <div style={{ height: 650, width: 1400, margin: "auto"}} className="ag-theme-material">
+      <div style={{ width: 1400, margin: "auto"}} className="ag-theme-material">
         <AgGridReact
           ref={gridRef}
           rowData={trainings}
           columnDefs={columns}
+          domLayout= 'autoHeight'
           defaultColDef={defaultColDef}
-          onRowEditingStopped={onRowEditingStopped}
-          onRowEditingStarted={onRowEditingStarted}
-          onCellClicked={onCellClicked}
-          editType="fullRow"
+          editType="none"
           modules={[ClientSideRowModelModule]}
           pagination={true}
           components={{
