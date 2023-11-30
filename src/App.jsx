@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import { Routes, Route } from "react-router-dom";
 import Layout from './pages/Layout';
 import Home from './pages/Home';
-import ListPage from './pages/ListPage';
+import CustomerList from './pages/CustomerList';
+import TrainingList from './pages/TrainingsList';
 import Calendar from './pages/Calendar';
 import './App.css'
 
@@ -14,7 +14,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="list" element={<ListPage />} />
+          <Route path="customers" element={<CustomerList />} />
+          <Route path="trainings" element={<TrainingList />} />
           <Route path="calendar" element={<Calendar />} />
         </Route>
       </Routes>
