@@ -87,9 +87,10 @@ export default function TrainingList() {
   return (
     <div>
       <div>TrainingList</div>
-      <div style={{ width: 1400, margin: "auto"}} className="ag-theme-material">
+      <div style={{ width: "100%", margin: "auto"}} className="ag-theme-material">
         <AgGridReact
           ref={gridRef}
+          style={{ width: '100%', height: '100%' }}
           rowData={trainings}
           columnDefs={columns}
           domLayout= 'autoHeight'
@@ -97,6 +98,8 @@ export default function TrainingList() {
           //minimises bundle size
           modules={[ClientSideRowModelModule]}
           pagination={true}
+          //fill the contained horizontally
+          onGridSizeChanged= {(gridOptions  ) => {gridOptions.api.sizeColumnsToFit()}}   
           components={{
             //aligns ag-grid cell content to the start of the cell
             customCellRenderer: CustomCellRenderer

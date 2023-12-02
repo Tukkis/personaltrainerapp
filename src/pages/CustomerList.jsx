@@ -4,7 +4,10 @@ import "ag-grid-community/styles/ag-grid.css";
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { Button, Snackbar } from "@mui/material";
 import CustomCellRenderer from '../components/CustomCellRenderer';
+import AddCustomer from '../components/AddCustomer'
+import AddTraining from '../components/AddTraining'
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
+import moment from 'moment';
 
 export default function CustomerList() {
 
@@ -12,7 +15,9 @@ export default function CustomerList() {
   const [customers, setCustomers] = useState([])
   const [msg, setMsg] = useState("");
 	const [open, setOpen] = useState(false);
-  const [actionButtons, setActionButtons] = useState()
+
+   // customer link for adding a new training
+  let customerTrainingLink = '';
 
   const getCustomers = () => {
     fetch("https://traineeapp.azurewebsites.net/api/customers")
@@ -47,15 +52,15 @@ export default function CustomerList() {
     }
   }
 
-  const saveCustomer = (training) => {
+  const saveCustomer = (customer) => {
       fetch("https://traineeapp.azurewebsites.net/api/customers", {
     method: 'POST',
     headers: { 'Content-type': 'application/json' },
-    body: JSON.stringify(training)
+    body: JSON.stringify(customer)
   })
     .then(res => {
       if (res.ok) {
-        getTrainings();
+        getCustomers();
       } else {
         alert("Error:" + res.status)
       }
@@ -63,27 +68,45 @@ export default function CustomerList() {
   .catch(err => console.error(err));
   }
 
-  const updateCustomer = (training, link) => {
-  if(window.confirm("Are you sure?")){
-    fetch(link, {
-      method: 'PUT',
-      headers: {
-        'Content-type': 'application/json'
-      },
-      body: JSON.stringify(training)
+  const saveTraining = (training) => {
+    fetch('https://traineeapp.azurewebsites.net/api/trainings', {
+    method: 'POST',
+    headers: { 'Content-type': 'application/json' },
+    body: JSON.stringify({...training, customer:customerTrainingLink})
     })
     .then(res => {
       if (res.ok) {
         getCustomers();
-        setMsg(" has been edited successfully!");
-        setOpen(true);
       } else {
-        alert("Error!" + res.status)
+        alert("Error:" + res.status)
       }
     })
-    .catch(err => console.error(err))
+    .catch(err => console.error(err));
+  }
+
+  const updateCustomer = (customer,link) => {
+    if (window.confirm("Are you sure?")) {
+      fetch(link, {
+        method: 'PUT',
+        headers: {
+          'Content-type': 'application/json'
+        },
+        body: JSON.stringify(customer)
+      })
+      .then(res => {
+        if (res.ok) {
+          getCustomers();
+          setMsg("Customer has been edited successfully!");
+          setOpen(true);
+        } else {
+          alert("Error!" + res.status);
+        }
+      })
+      .catch(err => console.error(err));
     }
   }
+
+  let updateButtonClicked = false;
 
   const actionCellRenderer = (params) => {
 
@@ -105,6 +128,7 @@ export default function CustomerList() {
             data-action="cancel">
                 cancel
           </Button>
+          <AddTraining saveTraining={saveTraining} dataaction={"add"} />
           </div>
     } else {
       return <div>
@@ -112,12 +136,13 @@ export default function CustomerList() {
             className="action-button edit"  
             data-action="edit">
               edit 
-            </Button>
+          </Button>
           <Button 
             className="action-button delete"
             data-action="delete">
               delete
           </Button>
+          <AddTraining saveTraining={saveTraining} dataaction={"add"} />
           </div>
     }
   }
@@ -125,7 +150,7 @@ export default function CustomerList() {
   const columns = [
     {
       headerName: "Action",
-      minWidth: 150,
+      minWidth: 308,
       cellRenderer: actionCellRenderer,
       editable: false,
       colId: "action",
@@ -167,11 +192,17 @@ export default function CustomerList() {
       }
 
       if (action === 'update') {
+        updateButtonClicked = true;
         params.api.stopEditing(false);
       }
 
       if (action === 'cancel') {
         params.api.stopEditing(true);
+      }
+
+      if (action === 'add') {
+        //get link
+        customerTrainingLink = params.node.data.links[0].href;
       }
     }
   }
@@ -183,18 +214,28 @@ export default function CustomerList() {
       force: true
     });
   }
+
   const onRowEditingStopped = (params) => {
+    // Check the flag to determine whether editing was canceled or confirmed
+    if (updateButtonClicked) {
+        updateCustomer(params.node.data,params.node.data.links[0].href)
+     } 
+
+    // Reset the flag for the next edit
+    updateButtonClicked = false;
+
     params.api.refreshCells({
       columns: ["action"],
       rowNodes: [params.node],
       force: true
     });
   }
+  
 
   return (
-    <div>
-      <div>TrainingList</div>
-      <div style={{ width: 1400, margin: "auto"}} className="ag-theme-material">
+    <div style={{width:"100%"}}>
+      <div>CustomerList</div>
+      <div style={{ width: "100%"}} className="ag-theme-material">
         <AgGridReact
           ref={gridRef}
           rowData={customers}
@@ -204,16 +245,20 @@ export default function CustomerList() {
           onRowEditingStopped={onRowEditingStopped}
           onRowEditingStarted={onRowEditingStarted}
           onCellClicked={onCellClicked}
+          //fill the contained horizontally
+          onGridSizeChanged= {(gridOptions  ) => {gridOptions.api.sizeColumnsToFit()}}   
           editType="fullRow"
           suppressClickEdit={true}
           //minimizes bundle size
           modules={[ClientSideRowModelModule]}
           pagination={true}
+          paginationPageSize={10}
           components={{
             customCellRenderer: CustomCellRenderer
           }}
         />
       </div>
+      <AddCustomer saveCustomer={saveCustomer} />
       <Snackbar
           open={open}
           autoHideDuration={3000}

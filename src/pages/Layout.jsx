@@ -3,7 +3,7 @@ import { Outlet, Link } from "react-router-dom";
 
 export default function Layout() {
     return (
-      <div>
+      <>
         <nav>
           <ul>
             <li>
@@ -22,7 +22,7 @@ export default function Layout() {
         </nav>
   
         <hr />
-        <Outlet />
-      </div>
+        <Outlet style={{width:"100%"}} />
+      </>
     );
 }
