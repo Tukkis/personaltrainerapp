@@ -1,16 +1,19 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react';
 import "ag-grid-community/styles/ag-grid.css";
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { Button, Snackbar } from "@mui/material";
 import CustomCellRenderer from '../components/CustomCellRenderer';
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
+import { CSVLink } from "react-csv";
+import moment from 'moment/moment';
 
 
 export default function TrainingList() {
 
   const gridRef = useRef();
   const [trainings, setTrainings] = useState([])
+  const [csvData,setCsvData] = useState([])
   const [msg, setMsg] = useState("");
 	const [open, setOpen] = useState(false);
 
@@ -22,11 +25,16 @@ export default function TrainingList() {
           const customerName = training.customer ? `${training.customer.firstname} ${training.customer.lastname}` : '';
           return {
             ...training,
+            date: moment(training.date).format("DD MM yyyy hh:mm:ss"),
             fullname: customerName,
           };
         });
-        console.log(processedData)
         setTrainings(processedData);
+        const csv = processedData.map(training => {
+          delete training.customer
+          return training
+        })
+        setCsvData(csv)
       })
       .catch(error => {
         console.error("Error fetching trainings:", error);
@@ -51,22 +59,6 @@ export default function TrainingList() {
         })
       .catch(err => console.log(err));
     }
-  }
-
-  const saveTraining = (training) => {
-      fetch("https://traineeapp.azurewebsites.net/api/trainings", {
-    method: 'POST',
-    headers: { 'Content-type': 'application/json' },
-    body: JSON.stringify(training)
-  })
-    .then(res => {
-      if (res.ok) {
-        getTrainings();
-      } else {
-        alert("Error:" + res.status)
-      }
-    })
-  .catch(err => console.error(err));
   }
 
   const columns = [
@@ -106,6 +98,7 @@ export default function TrainingList() {
           }}
         />
       </div>
+      <CSVLink data={csvData}>Download me</CSVLink>
       <Snackbar
           open={open}
           autoHideDuration={3000}

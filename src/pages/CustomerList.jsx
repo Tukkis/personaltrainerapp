@@ -7,13 +7,14 @@ import CustomCellRenderer from '../components/CustomCellRenderer';
 import AddCustomer from '../components/AddCustomer'
 import AddTraining from '../components/AddTraining'
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
-import moment from 'moment';
+import { CSVLink } from "react-csv";
 
 export default function CustomerList() {
 
   const gridRef = useRef();
   const [customers, setCustomers] = useState([])
   const [msg, setMsg] = useState("");
+  const [csvData,setCsvData] = useState([])
 	const [open, setOpen] = useState(false);
 
    // customer link for adding a new training
@@ -25,6 +26,12 @@ export default function CustomerList() {
       .then(data => {
         console.log(data)
         setCustomers(data.content);
+        const csv = data.content.map(customer => {
+          delete customer.content
+          delete customer.links
+          return customer
+        })
+        setCsvData(csv)
       })
       .catch(error => {
         console.error("Error fetching trainings:", error);
@@ -259,6 +266,7 @@ export default function CustomerList() {
         />
       </div>
       <AddCustomer saveCustomer={saveCustomer} />
+      <CSVLink data={csvData}>Download me</CSVLink>
       <Snackbar
           open={open}
           autoHideDuration={3000}
