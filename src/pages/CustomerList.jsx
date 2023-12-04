@@ -14,8 +14,8 @@ export default function CustomerList() {
   const gridRef = useRef();
   const [customers, setCustomers] = useState([])
   const [msg, setMsg] = useState("");
-  const [csvData,setCsvData] = useState([])
 	const [open, setOpen] = useState(false);
+  const [csvData,setCsvData] = useState([])
 
    // customer link for adding a new training
   let customerTrainingLink = '';
@@ -26,10 +26,15 @@ export default function CustomerList() {
       .then(data => {
         console.log(data)
         setCustomers(data.content);
+        // map data and omit objects
         const csv = data.content.map(customer => {
-          delete customer.content
-          delete customer.links
-          return customer
+          const customerCopy = {...customer}
+          // remove all objects from customers key value pairs
+          Object.entries(customerCopy).map(([key,value]) => {
+            typeof value === 'object' ?  delete customerCopy[key] : ''
+          })
+          return customerCopy
+          
         })
         setCsvData(csv)
       })
@@ -49,7 +54,7 @@ export default function CustomerList() {
         .then(res => {
           if (res.ok) {
             getCustomers();
-                        setMsg(customer.data.firstname+ " "+ customer.data.lastname + " has been deleted successfully!");
+              setMsg(customer.data.firstname+ " "+ customer.data.lastname + " has been deleted successfully!");
             setOpen(true);  
           } else {
             alert("Error:" + res.status)
@@ -60,19 +65,19 @@ export default function CustomerList() {
   }
 
   const saveCustomer = (customer) => {
-      fetch("https://traineeapp.azurewebsites.net/api/customers", {
-    method: 'POST',
-    headers: { 'Content-type': 'application/json' },
-    body: JSON.stringify(customer)
-  })
-    .then(res => {
-      if (res.ok) {
-        getCustomers();
-      } else {
-        alert("Error:" + res.status)
-      }
+    fetch("https://traineeapp.azurewebsites.net/api/customers", {
+      method: 'POST',
+      headers: { 'Content-type': 'application/json' },
+      body: JSON.stringify(customer)
     })
-  .catch(err => console.error(err));
+      .then(res => {
+        if (res.ok) {
+          getCustomers();
+        } else {
+          alert("Error:" + res.status)
+        }
+      })
+    .catch(err => console.error(err));
   }
 
   const saveTraining = (training) => {
@@ -92,6 +97,7 @@ export default function CustomerList() {
   }
 
   const updateCustomer = (customer,link) => {
+    console.log("update")
     if (window.confirm("Are you sure?")) {
       fetch(link, {
         method: 'PUT',
@@ -157,7 +163,7 @@ export default function CustomerList() {
   const columns = [
     {
       headerName: "Action",
-      minWidth: 308,
+      minWidth: 310,
       cellRenderer: actionCellRenderer,
       editable: false,
       colId: "action",
@@ -190,7 +196,7 @@ export default function CustomerList() {
         params.api.startEditingCell({
           rowIndex: params.node.rowIndex,
           // gets the first columnKey
-          colKey: params.columnApi.getDisplayedCenterColumns()[0].colId,
+          colKey: params.api.getDisplayedCenterColumns()[0].colId,
         });
       }
 
@@ -209,6 +215,7 @@ export default function CustomerList() {
 
       if (action === 'add') {
         //get link
+        console.log(params.node.data.links[0].href)
         customerTrainingLink = params.node.data.links[0].href;
       }
     }
@@ -261,6 +268,7 @@ export default function CustomerList() {
           pagination={true}
           paginationPageSize={10}
           components={{
+            //aligns ag-grid cell content to the start of the cell
             customCellRenderer: CustomCellRenderer
           }}
         />

@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import CustomerList from './pages/CustomerList';
 import TrainingList from './pages/TrainingsList';
 import Calendar from './pages/Calendar';
+import Stats from "./pages/Stats";
 import './App.css'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="customers" element={<CustomerList />} />
           <Route path="trainings" element={<TrainingList />} />
           <Route path="calendar" element={<Calendar />} />
+          <Route path="stats" element={<Stats />} />
         </Route>
       </Routes>
     </>

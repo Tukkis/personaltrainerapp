@@ -30,9 +30,12 @@ export default function TrainingList() {
           };
         });
         setTrainings(processedData);
+        //omit objects from csv
         const csv = processedData.map(training => {
-          delete training.customer
-          return training
+          // create a copy to prevent effecting trainings state
+          const copy = {...training}
+          delete copy.customer
+          return copy
         })
         setCsvData(csv)
       })
